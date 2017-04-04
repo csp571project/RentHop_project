@@ -29,3 +29,12 @@ ny_outliers_dist <- 0.2
 
 ###############################################################################
 
+###############################################################################
+data2 <- read.csv("/home/raz/Projects/EDA_features/baseline_model/train_baseline.csv", header = TRUE)
+
+data3 <- merge(x = training[c("listing_id", "numPh", "numFeat", "distance_city")], y = data2, by = 'listing_id' )
+View(data3)
+################################################################################
+##new baseline
+################################################################################
+
