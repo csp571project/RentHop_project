@@ -35,6 +35,11 @@ data2 <- read.csv("/home/raz/Projects/EDA_features/baseline_model/train_baseline
 data3 <- merge(x = training[c("listing_id", "numPh", "numFeat", "distance_city")], y = data2, by = 'listing_id' )
 View(data3)
 ################################################################################
-##new baseline
+### new baseline
 ################################################################################
+dim(data3)
+write.csv(data3, file = "/home/raz/Projects/EDA_features/processed_data/baseline11_v2.csv")
+
+
+
 
