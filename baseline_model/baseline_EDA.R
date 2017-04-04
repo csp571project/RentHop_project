@@ -1,6 +1,6 @@
 library(nnet)
 
-train <- read.csv('train_baseline.csv',header = TRUE)
+train_base <- read.csv('../processed_data/train_baseline11_v2.csv',header = TRUE)
 
 # plot the distribution of bedrooms and bathrooms
 hist(train$bathrooms)
