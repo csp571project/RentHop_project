@@ -9,7 +9,7 @@ library(knitr)
 ##        READ DATA
 ################################################################################
 
-training <- fromJSON("/home/raz/Documents/renthop/train.json") %>% 
+training <- fromJSON("/home/raz/Downloads/train.json") %>% 
   bind_rows 
 features <- training$features
 photos <- training$photos
@@ -41,4 +41,5 @@ training[, numerical_variables] %<>%
   lapply(., as.numeric)
 
 training$interest_level <- as.factor(training$interest_level)
+
 

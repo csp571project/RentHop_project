@@ -3,6 +3,9 @@ library(ggplot2)
 library(magrittr)
 library(jsonlite)
 library(ggmap)
+
+#  /home/raz/anaconda3/lib/R/library
+
 library(knitr)
 
 ################################################################################
@@ -22,9 +25,9 @@ training$distance_city <-
   mapply(function(lon, lat) sqrt((lon - ny_lon)^2  + (lat - ny_lat)^2),
          training$longitude,       training$latitude) 
 
-ny_outliners_dist <- 0.2
+ny_outliers_dist <- 0.2
 
-ggplot(training[training$distance_city < ny_outliners_dist, ],
+ggplot(training[training$distance_city < ny_outliers_dist, ],
        aes(distance_city, color = interest_level)) +
   geom_density()
 
@@ -59,3 +62,5 @@ coords <- sapply(outliers_ny,
 rownames(coords) <- 1:nrow(coords)
 # Display table
 kable(coords)
+
+View(training)
