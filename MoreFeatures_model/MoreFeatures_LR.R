@@ -2,21 +2,36 @@
 library(nnet)
 library(caret)
 
+########################
+# load all processed data
+########################
 train_base <- read.csv('../processed_data/train_baseline11_v2.csv', header = TRUE)
+train_des_st = read.csv('../processed_data/train_description_sentiment.csv', header = TRUE)
+train_des_tfidf = read.csv('../processed_data/train_description_wordcount_tfidf.csv', header = TRUE)
+
+train = merge(train_base, train_des_st)
+train = merge(train, train_des_tfidf)
 
 ########################
 # define the categorical and numeric features
 ########################
 # Check the type of each variable
 sapply(train_base, class)
+sapply(train_des_tfidf, class)
+sapply(train_des_st, class)
 
-base_numVars = c('bedrooms', 'bathrooms', 'price','numFeat', 'numPh', 'distance_city')
-base_catVars = c('weekend', 'created_month')
-for(var in base_catVars){
-  train_base[var] = lapply(train_base[var], factor)
+numVars = c('bedrooms', 'bathrooms', 'price','numFeat', 'numPh', 'distance_city',
+            names(train_des_st)[!names(train_des_st) %in% c("listing_id", "interest_level", "interest_Nbr")],
+            names(train_des_tfidf)[!names(train_des_tfidf) %in% c("listing_id", "interest_level", "interest_Nbr")]
+            )
+
+catVars = c('weekend', 'created_month')
+for(var in catVars){
+  train[var] = lapply(train[var], factor)
 }
 
-train_base$interest_level_mult <- relevel(train_base$interest_level, ref = "low")
+# Reset the interest level, set the 'low' as the base line of the model
+train$interest_level_mult <- relevel(train$interest_level, ref = "low")
 targetVar = 'interest_level_mult'
 
 ########################
@@ -33,19 +48,20 @@ createModelFormula <- function(targetVar, xVars, includeIntercept = TRUE){
 }
 
 # Split into train and test sets
-inTrain <- createDataPartition(y = train_base$interest_level_num, list = FALSE, p = 0.8)
-train_base.train <- train_base[inTrain,]
-train_base.test <- train_base[-inTrain,]
+inTrain <- createDataPartition(y = train$interest_level_num, list = FALSE, p = 0.8)
+train.train <- train[inTrain,]
+train.test <- train[-inTrain,]
 
-# modelForm = createModelFormula(targetVar, c(base_catVars, base_numVars), TRUE)
-modelForm = createModelFormula(targetVar, c(base_catVars, base_numVars))
-base_model <- multinom(modelForm, data = train_base.train)
+# modelForm = createModelFormula(targetVar, c(catVars, numVars), FALSE)
+modelForm = createModelFormula(targetVar, c(catVars, numVars))
+model <- multinom(modelForm, data = train.train)
+summary(model)
 
 # Check the accuracy of the prediction
-# predicted = predict(base_model, train_base.test, type = "probs")
+# predicted = predict(model, train.test, type = "probs")
 # compare = as.data.frame(cbind(apply(predicted,1, which.max),train.test$interest_level_num))
-predicted = predict(base_model, base_train.test)
-compare = as.data.frame(cbind(predicted,base_train.test$interest_level_mult))
+predicted = predict(model, train.test)
+compare = as.data.frame(cbind(predicted,train.test$interest_level_mult))
 colnames(compare) = c('predicted', 'real')
 
 conf_matrix <- table(compare$predicted, compare$real)
@@ -64,10 +80,10 @@ LogLoss = function(actual, predicted, eps = 1e-15) {
   return(-mean(sapply(1:dim(predicted)[1], function(i) log(predicted[i, as.character(actual[i])]))))
 }
 
-predicted = predict(base_model, train_base.test, type = "probs")
-logloss = LogLoss(train_base.test$interest_level_mult, predicted)
+predicted = predict(model, train.test, type = "probs")
+logloss = LogLoss(train.test$interest_level_mult, predicted)
 logloss
-# [1] 0.7136462
+# [1] 0.7398928
 
 ########################
 # cross validation for accuracy
@@ -76,11 +92,11 @@ logloss
 cross_validation = function(data = data, targetVar = targetVar, xVars = xVars, includeIntercept = TRUE){
   accuracy = numeric()
   for(i in 1:10){
-      if(i<10){
-        fold = paste('Fold0', i, sep = '')
-      }else{
-        fold = paste('Fold', i, sep = '')
-      }
+    if(i<10){
+      fold = paste('Fold0', i, sep = '')
+    }else{
+      fold = paste('Fold', i, sep = '')
+    }
     testIndexes <- createFolds(data$interest_level_mult, k=10, list=TRUE)[[fold]]
     testData <- data[testIndexes, ]
     trainData <- data[-testIndexes, ]
@@ -96,21 +112,22 @@ cross_validation = function(data = data, targetVar = targetVar, xVars = xVars, i
   return(accuracy)
 }
 
-accuracy = cross_validation(train_base, targetVar, c(base_catVars, base_numVars))
+accuracy = cross_validation(train, targetVar, c(catVars, numVars))
 accuracy
-# [1] 0.6884880 0.6844345 0.6881459 0.6873354 0.6891591 0.6865248 0.6936170 0.6904376 0.6901722
-# [10] 0.6952381
+# [1] 0.6869301 0.6857780 0.6934765 0.6855117 0.6824721 0.6914506 0.6966565 0.6893617 0.6893617
+# [10] 0.6914506
 
 mean(accuracy)
-# [1] 0.6893553
+# [1] 0.6892449
 
 # modeling without intercept
-accuracy = cross_validation(train_base, targetVar, c(base_catVars, base_numVars), FALSE)
+accuracy = cross_validation(train, targetVar, c(catVars, numVars), FALSE)
 accuracy
-# [1] 0.6934144 0.6974671 0.6911854 0.6879433 0.6881459 0.6869301 0.6876013 0.6877406 0.6873354
-# [10] 0.6882091
+# [1] 0.6900324 0.6888169 0.6812563 0.6876013 0.6883485 0.6855117 0.6869301 0.6994934 0.6907801
+# [10] 0.6913880
 
 mean(accuracy)
-# [1] 0.6895972
+# [1] 0.6890159
 
 # accuracy has no much difference with and without intercept
+
