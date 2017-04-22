@@ -20,19 +20,18 @@ sapply(train_base, class)
 sapply(train_des_tfidf, class)
 sapply(train_des_st, class)
 
-numVars = c('bedrooms', 'bathrooms', 'price','numFeat', 'numPh', 'distance_city',
-            names(train_des_st)[!names(train_des_st) %in% c("listing_id", "interest_level", "interest_Nbr")],
-            names(train_des_tfidf)[!names(train_des_tfidf) %in% c("listing_id", "interest_level", "interest_Nbr")]
-)
+numVars = c('bedrooms', 'bathrooms', 'price','numFeat', 'numPh', 'distance_city' )
+#             names(train_des_st)[!names(train_des_st) %in% c("listing_id", "interest_level", "interest_Nbr")],
+#             names(train_des_tfidf)[!names(train_des_tfidf) %in% c("listing_id", "interest_level", "interest_Nbr")]
+# )
 
 catVars = c('weekend', 'created_month')
 for(var in catVars){
   train[var] = lapply(train[var], factor)
 }
 
-# Reset the interest level, set the 'low' as the base line of the model
-train$interest_level_mult <- relevel(train$interest_level, ref = "low")
-targetVar = 'interest_level_mult'
+
+targetVar = 'interest_level'
 
 ########################
 # split into train and test
@@ -47,6 +46,7 @@ createModelFormula <- function(targetVar, xVars, includeIntercept = TRUE){
   return(modelForm)
 }
 
+
 # Split into train and test sets
 inTrain <- createDataPartition(y = train$interest_level_num, list = FALSE, p = 0.8)
 train.train <- train[inTrain,]
@@ -54,7 +54,6 @@ train.test <- train[-inTrain,]
 
 # modelForm = createModelFormula(targetVar, c(catVars, numVars), FALSE)
 modelForm = createModelFormula(targetVar, c(catVars, numVars))
-model <- multinom(modelForm, data = train.train)
 summary(model)
 
 ###################
@@ -66,10 +65,11 @@ fit <-  randomForest(modelForm, data = train.train, importance = TRUE, ntree = 2
 varImpPlot(fit)
 
 pred1 <- predict(fit, train.test)
-compare = as.data.frame(cbind(pred1,train.test$interest_level_mult))
+compare = as.data.frame(cbind(pred1,train.test$interest_level))
 colnames(compare) = c('predicted', 'real')
 conf_matrix <- table(compare$predicted, compare$real)
 confusionMatrix(conf_matrix)
+
 # Confusion Matrix and Statistics
 
 # 
