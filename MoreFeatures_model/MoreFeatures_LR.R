@@ -20,6 +20,7 @@ train = merge(train, train_des_tfidf)
 ########################
 # Check the type of each variable
 sapply(train_base, class)
+sapply(train_base1, class)
 sapply(train_des_tfidf, class)
 sapply(train_des_st, class)
 
@@ -149,19 +150,53 @@ cross_validation = function(data = data, targetVar = targetVar, xVars = xVars, i
 
 accuracy = cross_validation(train, targetVar, c(catVars, numVars))
 accuracy
+# old Baseline + senti only
+# [1] 0.6887538 0.6904376 0.7023303 0.6918558 0.7013776 0.6913880 0.6945683
+# [8] 0.6959870 0.6891591 0.6932118
+# old Baseline + senti + old tfidf table
+# [1] 0.6869301 0.6857780 0.6934765 0.6855117 0.6824721 0.6914506 0.6966565 0.6893617 0.6893617
+# [10] 0.6914506
+# old Baseline + senti + new tfidf table
+# [1] 0.6959076 0.7021277 0.6950355 0.6832827 0.6950972 0.6853728 0.6901722
+# [8] 0.6786872 0.6867275 0.6990272
+# new Baseline + senti + old tfidf
 # [1] 0.7760892 0.7710233 0.7787234 0.7759319 0.7791734 0.7687943
 # [7] 0.7698541 0.7755267 0.7775076 0.7740628
 
 mean(accuracy)
+# old Baseline + senti only
+# [1] 0.6939069
+# old Baseline + senti + old tfidf table
+# [1] 0.6892449
+# old Baseline + senti + new tfidf table
+# [1] 0.6911437
+# new Baseline + senti + old tfidf
 # [1] 0.7746687
 
 # modeling without intercept
 accuracy = cross_validation(train, targetVar, c(catVars, numVars), FALSE)
 accuracy
+# old Baseline + senti only
+# [1] 0.6955024 0.6899696 0.6916532 0.6971232 0.6895643 0.6934144 0.6973258
+# [8] 0.6928065 0.6955024 0.6924635
+# old Baseline + senti + old tfidf table
+# [1] 0.6900324 0.6888169 0.6812563 0.6876013 0.6883485 0.6855117 0.6869301 0.6994934 0.6907801
+# [10] 0.6913880
+# old Baseline + senti + new tfidf table
+# [1] 0.6893617 0.6920583 0.6873354 0.6924635 0.6932118 0.6918558 0.6895643
+# [8] 0.6909828 0.6917933 0.6887538
+# new Baseline + senti + old tfidf
 # [1] 0.7671733 0.7650993 0.7663627 0.7752786 0.7677812 0.7722391
 # [7] 0.7720827 0.7779579 0.7773501 0.7663154
 
 mean(accuracy)
+# old Baseline + senti only
+# [1] 0.6935325
+# old Baseline + senti + old tfidf table
+# [1] 0.6890159
+# old Baseline + senti + new tfidf table
+# [1] 0.6907381
+# new Baseline + senti + old tfidf
 # [1] 0.770764
 
 # accuracy has no much difference with and without intercept
