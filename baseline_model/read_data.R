@@ -87,6 +87,32 @@ test$manager_score = as.numeric(test$V2)
 test$V2 = NULL
 test$manager_score[is.na(test$manager_score)] = manager_mean
 
+# Check the unique manager and building amount in train and test
+length(names(table(train$manager_id)))
+#[1] 3481
+length(names(table(test$manager_id)))
+#[1] 3851
+
+length(names(table(train$building_id)))
+#[1] 7585
+length(names(table(test$building_id)))
+#[1] 9321
+
+length(setdiff(names(table(test$manager_id)), names(table(train$manager_id))))
+#[1] 918
+length(setdiff(names(table(train$manager_id)), names(table(test$manager_id))))
+#[1] 548
+length(setdiff(names(table(test$manager_id)), names(table(train$manager_id))))/length(names(table(test$manager_id)))
+#[1] 0.2383796
+
+length(setdiff(names(table(test$building_id)), names(table(train$building_id))))
+#[1] 4050
+length(setdiff(names(table(train$building_id)), names(table(test$building_id))))
+#[1] 2314
+length(setdiff(names(table(test$building_id)), names(table(train$building_id))))/length(names(table(test$building_id)))
+#[1] 0.4345027
+
+
 test = merge(test, building_score, by = 'building_id', all.x = TRUE)
 test$building_score = as.numeric(test$building_score)
 #test$V2 = NULL
