@@ -70,6 +70,12 @@ description$clean_wordcount = vapply(description$clean_des, wordcount, integer(1
 write.csv(description, file= "../processed_data/train_description.csv", row.names=FALSE)
 
 ####################
+# Add this column to the baseline data
+train = read.csv('../processed_data/train_baseline11_v3.csv')
+train = merge(train, description[c('listing_id', 'clean_wordcount')])
+write.csv(train, file = '../processed_data/train_baseline12_v4.csv', row.names = FALSE)
+
+####################
 ## tokenize and tfidf
 # Select the rows with the description length more than 0, tfidf only works on these rows
 non_empty_clean_des = description[which(description$clean_wordcount!=0), ]
@@ -92,8 +98,7 @@ tfidf_df = as.data.frame(inspect(tfidf[,which(tfidf$dimnames$Terms%in%frequent)]
 colnames(tfidf_df) = sapply(colnames(tfidf_df), function(v) paste('term',v,sep='_'), USE.NAMES = FALSE)
 tfidf_df['listing_id'] = non_empty_clean_des$listing_id
 
-tfidf_df_full=description[c('listing_id', 'interest_level', 'interest_Nbr', 'clean_wordcount')]
-tfidf_df_full['wordcount'] = tfidf_df_full$clean_wordcount
+tfidf_df_full=description[c('listing_id', 'interest_level', 'interest_Nbr')]
 tfidf_df_full$clean_wordcount=NULL
 
 tfidf_df_full = merge(x = tfidf_df_full, y = tfidf_df, by = "listing_id", all.x = TRUE)
@@ -101,7 +106,7 @@ tfidf_df_full = merge(x = tfidf_df_full, y = tfidf_df, by = "listing_id", all.x 
 # Convert all na to 0
 tfidf_df_full[is.na(tfidf_df_full)] = 0
 
-write.csv(tfidf_df_full, file="../processed_data/train_description_wordcount_tfidf.csv", row.names=FALSE)
+write.csv(tfidf_df_full, file="../processed_data/train_description_tfidf.csv", row.names=FALSE)
 
 ####################
 ## Sentiment extraction
