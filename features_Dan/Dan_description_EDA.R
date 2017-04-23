@@ -1,10 +1,9 @@
-setwd("/Users/Dan/2017 spring/CSP 571/project/data")
 transfer=list('low'=1, 'medium'=2, 'high'=3)
 
 ####################
 # Read description directly from previously processed csv
 # Modeling with word count
-description = read.csv(file='train_description.csv', header=TRUE, stringsAsFactors = FALSE)
+description = read.csv(file='../processed_data/train_description.csv', header=TRUE, stringsAsFactors = FALSE)
 non_empty_clean_des = description[which(description$clean_wordcount!=0), ]
 
 library('caret')

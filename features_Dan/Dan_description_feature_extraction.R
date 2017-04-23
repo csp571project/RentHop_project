@@ -1,12 +1,9 @@
-setwd("/Users/Dan/2017 spring/CSP 571/project/data")
 transfer=list('low'=1, 'medium'=2, 'high'=3)
 
 ####################
 # # Read from train data set
 library("rjson")
-files = list.files(pattern = '*.json')
-train_file<-files[2]
-train_data<-fromJSON(file=train_file)
+train_data<-fromJSON('../train.json')
 train_data <- lapply(train_data, function(x) {
   x[sapply(x, is.null)] <- NA
   unlist(x,use.names = FALSE)
@@ -124,4 +121,4 @@ sentiment['interest_Nbr'] = description$interest_Nbr
 
 sentiment = sentiment[c('listing_id', 'interest_level', 'interest_Nbr', senti)]
 
-write.csv(sentiment, "train_description_sentiment.csv", row.names=FALSE)
+write.csv(sentiment, "../processed_data/train_description_sentiment.csv", row.names=FALSE)
