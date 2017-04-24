@@ -219,8 +219,7 @@ write.csv(train[c('listing_id','bedrooms',
                   'weekend', 'interest_level', 'interest_level_num', 'time_ofday' , 'clean_wordcount',
                   'numPh', 'numFeat', 'distance_city',"cats","dishwasher","dogs","doorman","elevator","fee","fitness"
                   ,"hardwoods","laundry","war")],
-          file = '../../processed_data/train_baselineCLEAN.csv', row.names = FALSE)
-
+          file = '../processed_data/train_baselineCLEAN.csv', row.names = FALSE)
 
 
 
@@ -229,7 +228,11 @@ write.csv(train[c('listing_id','bedrooms',
 ##############################################################
 
 #Train-test split
-
+train <- train[c('listing_id','bedrooms',
+        'bathrooms','price','created_month', 'created_hour',
+        'weekend', 'interest_level', 'interest_level_num', 'time_ofday' , 'clean_wordcount',
+        'numPh', 'numFeat', 'distance_city',"cats","dishwasher","dogs","doorman","elevator","fee","fitness"
+        ,"hardwoods","laundry","war")]
 
 set.seed(11080)
 library('caret')
@@ -244,7 +247,7 @@ stopifnot(nrow(renttrain) + nrow(renttest) == nrow(train))
 remove(ny_center,ny_lat, ny_lon, inTrain, stop_words, word_sparse,
        days, f,feat, i, pattern, temp, testsplit, transfer, time.tag, top_word, trainsplit,
        vars, word_remove)
-remove(train1)
+remove(train1, train1)
 
 gc()
 
