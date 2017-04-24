@@ -106,9 +106,10 @@ train$created_hour <- substr(train$created, 12, 13)
 # unique(train$interest_level)
 
 #reorder the levels
-train$interest_level <-
-  factor(train$interest_level, levels = c("low", "medium", "high"))
+#train$interest_level <-
+#  factor(train$interest_level, levels = c("low", "medium", "high"))
 # "low" "medium" "high" to 1 2 3 as numeric
+
 train$interest_level_num <- as.numeric(train$interest_level)
 
 
