@@ -288,11 +288,12 @@ word_remove = c('allowed', 'building','center', 'space','2','2br','bldg','24',
 word_sparse<-train1[,names(train1) %in% c("features","listing_id")]
 train1$features = NULL
 #word_sparse <- as.matrix(word_sparse)
-
+require("tidytext")
+require("tidyr")
 #Create word features
 word_sparse <- word_sparse                %>%
   tidyr::unnest(features) %>%
-  unnest_tokens(word, features)
+  tidytext::unnest_tokens(word, features)
 
 data("stop_words")
 
@@ -402,77 +403,3 @@ remove(
 
 remove(train, train1)
 gc()
-
-
-# test <- fromJSON("../test.json")
-# test <- map_at(test, vars, unlist) %>% tibble::as_tibble(.)
-#
-# test$created_year <- format(as.Date(as.Date(test$created), format="%Y-%m-%d"),"%Y")
-# test$created_month <- format(as.Date(as.Date(test$created), format="%Y-%m-%d"),"%m")
-#
-# days <- as.Date(test$created)
-# test$weekend <- (wday(days,label = TRUE) == "Sat") | (wday(days,label = TRUE) == "Sun")
-#
-# test$created_hour <- substr(test$created,12,13)
-#
-# test = merge(test, manager_score, by='manager_id', all.x = TRUE)
-# test$manager_score = as.numeric(test$V2)
-# test$V2 = NULL
-# test$manager_score[is.na(test$manager_score)] = manager_mean
-#
-# # Check the unique manager and building amount in train and test
-# length(names(table(train$manager_id)))
-# #[1] 3481
-# length(names(table(test$manager_id)))
-# #[1] 3851
-#
-# length(names(table(train$building_id)))
-# #[1] 7585
-# length(names(table(test$building_id)))
-# #[1] 9321
-#
-# length(setdiff(names(table(test$manager_id)), names(table(train$manager_id))))
-# #[1] 918
-# length(setdiff(names(table(train$manager_id)), names(table(test$manager_id))))
-# #[1] 548
-# length(setdiff(names(table(test$manager_id)), names(table(train$manager_id))))/length(names(table(test$manager_id)))
-# #[1] 0.2383796
-#
-# length(setdiff(names(table(test$building_id)), names(table(train$building_id))))
-# #[1] 4050
-# length(setdiff(names(table(train$building_id)), names(table(test$building_id))))
-# #[1] 2314
-# length(setdiff(names(table(test$building_id)), names(table(train$building_id))))/length(names(table(test$building_id)))
-# #[1] 0.4345027
-#
-#
-# test = merge(test, building_score, by = 'building_id', all.x = TRUE)
-# test$building_score = as.numeric(test$building_score)
-# #test$V2 = NULL
-# test$building_score[is.na(test$building_score)] = building_mean
-#
-# # Add  the number of features and photos
-# for(i in 1:length(test$photos)){
-#   test$numPh[i] <- length(test$photos[[i]])
-#   test$numFeat[i] <- length(test$features[[i]])
-# }
-#
-# # Add distance to center
-# #install.packages('ggmap')
-# library(ggmap)
-#
-# # New York City Center Coords
-# ny_center <- geocode("new york", source = "google")
-# ny_lat <-  ny_center[2]
-# ny_lon <-  ny_center[1]
-#
-# # Add Euclidean Distance to City Center
-# test$distance_city <-
-#   mapply(function(lon, lat) sqrt((lon - ny_lon)^2  + (lat - ny_lat)^2),
-#          test$longitude, test$latitude)
-#
-# write.csv(test[c('listing_id','bedrooms',
-#                   'bathrooms','price','created_month', 'created_hour',
-#                   'weekend', 'numPh', 'numFeat', 'distance_city',
-#                   'manager_score', 'building_score')],
-#           file = '../processed_data/test_baseline11_v1.csv', row.names = FALSE)
