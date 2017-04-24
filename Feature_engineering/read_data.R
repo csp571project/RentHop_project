@@ -6,7 +6,7 @@ library(purrr)
 library(data.table)
 library('lubridate')
 
-train <- fromJSON('.//train.json')
+train <- fromJSON('..//train.json')
 
 
 sapply(train, class)
@@ -211,7 +211,7 @@ apply(train,2,anyNA)
 
 train[is.na(train)] <- 0
 
-head(train[,25:35])
+#head(train[,25:35])
 
 
 write.csv(train[c('listing_id','bedrooms',
