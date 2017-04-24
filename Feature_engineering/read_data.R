@@ -1,15 +1,21 @@
 # install.packages(c("purrr", "jsonlite", "dplyr"))
+# setwd("/Users/shuyuzhang/Desktop/2017Spring/CSP 571/FinalProject/Data")
 
 library(jsonlite)
 library(purrr)
 library(data.table)
 library('lubridate')
 
-train <- fromJSON('../train.json')
+train <- fromJSON('..//train.json')
 
 
+sapply(train, class)
 vars <- setdiff(names(train), c("photos", "features"))
 train <- map_at(train, vars, unlist) %>% tibble::as_tibble(.)
+
+names(train)
+table(is.na(train))
+summary(train)
 ###############
 ####################
 transfer=list('low'=1, 'medium'=2, 'high'=3)
@@ -85,8 +91,8 @@ train$weekend <- (wday(days,label = TRUE) == "Sat") | (wday(days,label = TRUE) =
 # Adding created hour see if it can improve accuracy of baseline model
 train$created_hour <- substr(train$created,12,13)
 
-# get the value of interest_level
-# unique(train$interest_level)
+#get the value of interest_level
+unique(train$interest_level)
 
 #reorder the levels
 train$interest_level <- factor(train$interest_level, levels =c("low","medium","high"))
@@ -94,7 +100,7 @@ train$interest_level <- factor(train$interest_level, levels =c("low","medium","h
 train$interest_level_num <- as.numeric(train$interest_level)
 
 
-#table(train$interest_level)
+table(train$interest_level)
 
 ##RP
 
@@ -120,6 +126,8 @@ train$distance_city <- 0
 train$distance_city <-
   mapply(function(lon, lat) sqrt((lon - ny_lon)^2  + (lat - ny_lat)^2),
          train$longitude, train$latitude) 
+
+names(train)
 
 time.tag <-  c("00", "06", "12", "18", "24")
 
@@ -155,6 +163,8 @@ train$features <- lapply(train$features, function(x) {gsub("^park\\.|common park
 
 #Keep only unique features
 train$features<-lapply(train$features, function(x) {unique(unlist(x, use.names = FALSE))})
+
+head(train$features,10)
 
 word_remove = c('allowed', 'building','center', 'space','2','2br','bldg','24',
                 '3br','1','ft','3','7','1br','hour','bedrooms','bedroom','true',
@@ -201,16 +211,17 @@ apply(train,2,anyNA)
 
 train[is.na(train)] <- 0
 
-features <- c('listing_id','bedrooms',
-              'bathrooms','price','created_month', 'created_hour',
-              'weekend', 'interest_level', 'interest_level_num', 'time_ofday' , 'clean_wordcount',
-              'numPh', 'numFeat', 'distance_city',"cats","dishwasher","dogs","doorman","elevator","fee","fitness"
-              ,"hardwoods","laundry","war")
+#head(train[,25:35])
 
 
-
-write.csv(train[features],
+write.csv(train[c('listing_id','bedrooms',
+                  'bathrooms','price','created_month', 'created_hour',
+                  'weekend', 'interest_level', 'interest_level_num', 'time_ofday' , 'clean_wordcount',
+                  'numPh', 'numFeat', 'distance_city',"cats","dishwasher","dogs","doorman","elevator","fee","fitness"
+                  ,"hardwoods","laundry","war")],
           file = '../processed_data/train_baselineCLEAN.csv', row.names = FALSE)
+
+
 
 
 
@@ -236,14 +247,27 @@ stopifnot(nrow(renttrain) + nrow(renttest) == nrow(train))
 remove(ny_center,ny_lat, ny_lon, inTrain, stop_words, word_sparse,
        days, f,feat, i, pattern, temp, testsplit, transfer, time.tag, top_word, trainsplit,
        vars, word_remove)
-
-remove(train, train1)
-gc()
-
-write.csv(renttrain[features], file = '../benchmark_data/train_benchmark.csv', row.names = FALSE)
-write.csv(renttest[features], file = '../benchmark_data//train_benchmark.csv', row.names = FALSE)
+remove(train1, train1)
 
 gc()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # test <- fromJSON("../test.json")
