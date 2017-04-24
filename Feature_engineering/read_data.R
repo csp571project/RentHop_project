@@ -201,19 +201,16 @@ apply(train,2,anyNA)
 
 train[is.na(train)] <- 0
 
-write.csv(train[c('listing_id','bedrooms',
-                  'bathrooms','price','created_month', 'created_hour',
-                  'weekend', 'interest_level', 'interest_level_num', 'time_ofday' , 'clean_wordcount',
-                  'numPh', 'numFeat', 'distance_city',"cats","dishwasher","dogs","doorman","elevator","fee","fitness"
-                  ,"hardwoods","laundry","war")],
-          file = '../processed_data/train_baselineCLEAN.csv', row.names = FALSE)
-
 features <- c('listing_id','bedrooms',
-  'bathrooms','price','created_month', 'created_hour',
-  'weekend', 'interest_level', 'interest_level_num', 'time_ofday' , 'clean_wordcount',
-  'numPh', 'numFeat', 'distance_city',"cats","dishwasher","dogs","doorman","elevator","fee","fitness"
-  ,"hardwoods","laundry","war")
+              'bathrooms','price','created_month', 'created_hour',
+              'weekend', 'interest_level', 'interest_level_num', 'time_ofday' , 'clean_wordcount',
+              'numPh', 'numFeat', 'distance_city',"cats","dishwasher","dogs","doorman","elevator","fee","fitness"
+              ,"hardwoods","laundry","war")
 
+
+
+write.csv(train[features],
+          file = '../processed_data/train_baselineCLEAN.csv', row.names = FALSE)
 
 
 
@@ -239,30 +236,9 @@ stopifnot(nrow(renttrain) + nrow(renttest) == nrow(train))
 remove(ny_center,ny_lat, ny_lon, inTrain, stop_words, word_sparse,
        days, f,feat, i, pattern, temp, testsplit, transfer, time.tag, top_word, trainsplit,
        vars, word_remove)
-<<<<<<< HEAD
+
 remove(train, train1)
-=======
-remove(train1, train1)
-
 gc()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
->>>>>>> a699e260aa148f832fd3ceeda55598a106cddf35
-
-my.df <- data.frame(lapply(old.df, as.character), stringsAsFactors=FALSE)
 
 write.csv(renttrain[features], file = '../benchmark_data/train_benchmark.csv', row.names = FALSE)
 write.csv(renttest[features], file = '../benchmark_data//train_benchmark.csv', row.names = FALSE)
