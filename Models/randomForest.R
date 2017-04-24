@@ -7,7 +7,7 @@ library(caret)
 ########################
 # train_base <- read.csv('../processed_data/train_baseline11_v2.csv', header = TRUE)
 # train_base1  <- read.csv('../processed_data/train_baselineNEW.csv', header = TRUE)
-train <- read.csv('../../processed_data/train_baselineCLEAN.csv', header = TRUE)
+train <- read.csv('../processed_data/train_baselineCLEAN.csv', header = TRUE)
 # train_des_st = read.csv('../../processed_data/train_description_sentiment.csv', header = TRUE)
 # train_des_tfidf = read.csv('../../processed_data/train_description_wordcount_tfidf.csv', header = TRUE)
 
@@ -25,7 +25,8 @@ sapply(train, class)
 # sapply(train_des_tfidf, class)
 # sapply(train_des_st, class)
 
-numVars = c('bedrooms', 'bathrooms', 'price','numFeat', 'numPh', 'distance_city', 'clean_wordcount')
+numVars = c('bedrooms', 'bathrooms', 'price','numFeat', 'numPh', 'distance_city', 'clean_wordcount',
+            'cats', '')
 # ,
 #             names(train_des_st)[!names(train_des_st) %in% c("listing_id", "interest_level", "interest_Nbr")],
 #             names(train_des_tfidf)[!names(train_des_tfidf) %in% c("listing_id", "interest_level", "interest_Nbr")]
@@ -36,8 +37,9 @@ for(var in catVars){
   train[var] = lapply(train[var], factor)
 }
 
+Xfeat <- names(train)[c(-1,-8, -9)]
 
-targetVar = 'interest_level'
+targetVar <- 'interest_level'
 
 ########################
 # split into train and test
@@ -70,7 +72,7 @@ train.train <- train[inTrain,]
 train.test <- train[-inTrain,]
 
 # modelForm = createModelFormula(targetVar, c(catVars, numVars), FALSE)
-modelForm = createModelFormula(targetVar, c(catVars, numVars))
+modelForm = createModelFormula(targetVar, Xfeat)
 
 
 ###################
@@ -90,6 +92,38 @@ compare = as.data.frame(cbind(pred1,train.test$interest_level))
 colnames(compare) = c('predicted', 'real')
 conf_matrix <- table(compare$predicted, compare$real)
 confusionMatrix(conf_matrix)
+
+########### Result with DD's Features #################
+# Confusion Matrix and Statistics
+# 
+# 
+# 1    2    3
+# 1  168   36  104
+# 2  336 6409 1624
+# 3  263  329  600
+# 
+# Overall Statistics
+# 
+# Accuracy : 0.7272         
+# 95% CI : (0.7183, 0.736)
+# No Information Rate : 0.6864         
+# P-Value [Acc > NIR] : < 2.2e-16      
+# 
+# Kappa : 0.2952         
+# Mcnemar's Test P-Value : < 2.2e-16      
+# 
+# Statistics by Class:
+# 
+# Class: 1 Class: 2 Class: 3
+# Sensitivity           0.21904   0.9461   0.2577
+# Specificity           0.98462   0.3667   0.9215
+# Pos Pred Value        0.54545   0.7658   0.5034
+# Neg Pred Value        0.93735   0.7567   0.8009
+# Prevalence            0.07772   0.6864   0.2359
+# Detection Rate        0.01702   0.6494   0.0608
+# Detection Prevalence  0.03121   0.8480   0.1208
+# Balanced Accuracy     0.60183   0.6564   0.5896
+########### Result with DD's Features #################
 
 ############### Result with clean_wordcount (CLEAN.csv)  ###################
 # Confusion Matrix and Statistics
@@ -128,10 +162,10 @@ require(doMC)
 require(caret)
 doMC::registerDoMC(cores=3)
 
-modelForm1 <- createModelFormula(targetVar, c(catVars, numVars))
+# modelForm1 <- createModelFormula(targetVar, c(catVars, numVars))
 
 control <- trainControl(method="repeatedcv", number=10, repeats=3, search="grid")
-fit1 <-  randomForest(modelForm1, data = train.train, importance = TRUE, 
+fit1 <-  randomForest(modelForm, data = train.train, importance = TRUE, 
                       ntree = 150, parallel =TRUE, trcontrol = control )
 
 pred2 <- predict(fit1, train.test)
@@ -139,6 +173,41 @@ compare = as.data.frame(cbind(pred2,train.test$interest_level))
 colnames(compare) = c('predicted', 'real')
 conf_matrix <- table(compare$predicted, compare$real)
 confusionMatrix(conf_matrix)
+
+########### Tuned Result with DD's Features #################
+# 
+# Confusion Matrix and Statistics
+# 
+# 
+# 1    2    3
+# 1  175   36  111
+# 2  335 6399 1615
+# 3  257  339  602
+# 
+# Overall Statistics
+# 
+# Accuracy : 0.7271          
+# 95% CI : (0.7182, 0.7359)
+# No Information Rate : 0.6864          
+# P-Value [Acc > NIR] : < 2.2e-16       
+# 
+# Kappa : 0.297           
+# Mcnemar's Test P-Value : < 2.2e-16       
+# 
+# Statistics by Class:
+# 
+# Class: 1 Class: 2 Class: 3
+# Sensitivity           0.22816   0.9446   0.2586
+# Specificity           0.98385   0.3700   0.9210
+# Pos Pred Value        0.54348   0.7664   0.5025
+# Neg Pred Value        0.93799   0.7533   0.8009
+# Prevalence            0.07772   0.6864   0.2359
+# Detection Rate        0.01773   0.6484   0.0610
+# Detection Prevalence  0.03263   0.8460   0.1214
+# Balanced Accuracy     0.60601   0.6573   0.5898
+########### End Tuned Result with DD's Features #################
+
+
 
 ############### Tuning after adding clean_wordcount  (CLEAN.csv) #############
 # Confusion Matrix and Statistics
@@ -206,6 +275,9 @@ confusionMatrix(conf_matrix)
 # Balanced Accuracy     0.61343   0.6624  0.59275
 ################ without sentiment #######################
 
+
+
+
 #### Tuning with (11_v3.csv)    ################
 # Confusion Matrix and Statistics
 # 
@@ -236,6 +308,11 @@ confusionMatrix(conf_matrix)
 # Detection Rate        0.01470   0.6615  0.04470
 # Detection Prevalence  0.02645   0.8819  0.09163
 # Balanced Accuracy     0.58815   0.6214  0.56624
+
+
+
+
+
 #### Tuning with (11_v3.csv)    ################
 
 
