@@ -6,15 +6,78 @@ library(purrr)
 library(data.table)
 library('lubridate')
 
-train <- fromJSON('../train.json')
+train <- fromJSON('../../train.json')
+
 
 sapply(train, class)
 vars <- setdiff(names(train), c("photos", "features"))
 train <- map_at(train, vars, unlist) %>% tibble::as_tibble(.)
 
-str(train)
+names(train)
 table(is.na(train))
 summary(train)
+###############
+####################
+transfer=list('low'=1, 'medium'=2, 'high'=3)
+
+# Construct the basic description data frame
+description=data.frame(cbind(train$listing_id,
+                             train$description,
+                             train$interest_level),
+                       stringsAsFactors=FALSE)
+colnames(description) = c('listing_id', 'origin_des', 'interest_level')
+
+description$interest_Nbr <- unlist(sapply(description$interest_level,
+                                          function(v) transfer[v]), use.names = FALSE)
+
+####################
+## plain description is to remove the suffix
+# Get rid of the html patterns inside the text
+# https://tonybreyal.wordpress.com/2011/11/18/htmltotext-extracting-text-from-html-via-xpath/
+pattern = "</?\\w+((\\s+\\w+(\\s*=\\s*(?:\".*?\"|'.*?'|[^'\">\\s]+))?)+\\s*|\\s*)/?>"
+description$plain_des = gsub(pattern, "\\1", description$origin_des)
+
+# Get rid of the ending word
+description$plain_des = gsub("website_redacted", " ", description$plain_des)
+description$plain_des = gsub("<a", " ", description$plain_des)
+
+# This wordcount function does not distinguish duplicated words and will count the blank description as 0 word
+wordcount = function(v){
+  temp = strsplit(v, "\\W+")[[1]]
+  if(sum(which(temp==""))>0)
+    temp = temp[-which(temp=="")]
+  return(length(temp))
+}
+description$plain_wordcount = vapply(description$plain_des, wordcount, integer(1), USE.NAMES = FALSE)
+
+####################
+## clean description is to remove the stopwords and punctuation
+#install.packages("tm", dependencies = TRUE)
+library('tm')
+temp = VCorpus(VectorSource(description$plain_des))
+
+# Transfer to lower case
+corpus = tm_map(temp, content_transformer(tolower))
+# Get rid of the stop words
+corpus = tm_map(corpus, removeWords, stopwords("english"))
+(f <- content_transformer(function(x, pattern) gsub(pattern, " ", x)))
+# Get rid of the signle alphabetic and digit
+corpus = tm_map(corpus, f, "[[:digit:]]")
+corpus = tm_map(corpus, f, " *\\b[[:alpha:]]{1}\\b *")
+# Get rid of punctuations
+corpus = tm_map(corpus, f, "[[:punct:]]")
+# Get rid of extra white spaces
+corpus = tm_map(corpus, stripWhitespace)
+
+description$clean_des = unlist(lapply(corpus, as.character))
+
+train$clean_wordcount = vapply(description$clean_des, wordcount, integer(1), USE.NAMES=FALSE)
+
+remove(description)
+remove(corpus)
+gc()
+
+###############
 # Created year is useless because they are all 2016
 train$created_year <- format(as.Date(as.Date(train$created), format="%Y-%m-%d"),"%Y")
 
@@ -36,39 +99,53 @@ train$interest_level <- factor(train$interest_level, levels =c("low","medium","h
 # "low" "medium" "high" to 1 2 3 as numeric
 train$interest_level_num <- as.numeric(train$interest_level)
 
-# adding manger_score using the sum of interest_level_num devided by the number of building under
-# a specific manager_id
-manager_id <- unique(train$manager_id)
-manager_score <- NULL
-for(i in 1:length(manager_id)){
-  id <- manager_id[i]
-  total <- train$interest_level_num[train$manager_id == id]
-  manager_score[i] <- sum(total) / length(total)
-}
-manager_mean = mean(manager_score)
-manager_score <- cbind(manager_id, as.numeric(manager_score))
-train <- merge(train, manager_score)
-
-# building_score using the same method as manager_score
-building_id <- unique(train$building_id)
-building_score <- NULL
-for(i in 1:length(building_id)){
-  id <- building_id[i]
-  total <- train$interest_level_num[train$building_id == id]
-  building_score[i] <- sum(total) / length(total)
-}
-building_mean = mean(building_score)
-building_score <- cbind(building_id, building_score)
-train <- merge(train, building_score)
-
 
 table(train$interest_level)
 
+##RP
+
+train$numPh <- 0
+train$numFeat <- 0
+# Add  the number of features and photos
+for(i in 1:length(train$photos)){
+  train$numPh[i] <- length(train$photos[[i]])
+  train$numFeat[i] <- length(train$features[[i]])
+}
+
+# Add distance to center
+#install.packages('ggmap')
+library(ggmap)
+
+# New York City Center Coords
+ny_center <- geocode("new york", source = "google")
+ny_lat <-  ny_center[2]
+ny_lon <-  ny_center[1]
+
+train$distance_city <- 0
+# Add Euclidean Distance to City Center
+train$distance_city <-
+  mapply(function(lon, lat) sqrt((lon - ny_lon)^2  + (lat - ny_lat)^2),
+         train$longitude, train$latitude) 
+
+names(train)
+
+time.tag <-  c("00", "06", "12", "18", "24")
+
+train$time_ofday <- cut(as.numeric(train$created_hour), breaks=time.tag,
+                        labels = c("00-06","06-12", "12-18", "18-23"), include.lowest= TRUE)
+
+train$time_ofday <- as.factor(train$time_ofday)
+
 write.csv(train[c('listing_id','bedrooms',
                   'bathrooms','price','created_month', 'created_hour',
-                  'weekend', 'interest_level', 'interest_level_num', 
-                  'manager_score', 'building_score')],
-          file = '../processed_data/train_baselineNEW.csv', row.names = FALSE)
+                  'weekend', 'interest_level', 'interest_level_num', 'time_ofday' , 'clean_wordcount',
+                  'numPh', 'numFeat', 'distance_city')],
+          file = '../../processed_data/train_baselineCLEAN.csv', row.names = FALSE)
+
+
+
+
+
 
 ##############################################################
 test <- fromJSON("../test.json")

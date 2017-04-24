@@ -2,7 +2,7 @@ library(nnet)
 library(ggplot2)
 library(lattice)
 
-train_base <- read.csv('../processed_data/train_baseline11_v2.csv',header = TRUE)
+train_base <- read.csv('../../processed_data/train_baseline11_v2.csv',header = TRUE)
 str(train_base)
 
 # reorder interest levels
