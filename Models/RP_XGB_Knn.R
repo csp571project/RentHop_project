@@ -10,7 +10,7 @@ library(reshape2)
 seed = 11080
 set.seed(seed)
 
-train <- read.csv("../processed_data/train_baselineCLEAN.csv", header = TRUE)
+train <- read.csv("../processed_data/train_moreFeat36.csv", header = TRUE)
 
 featExtract <- function(c, lvl) {
   ###lvl controls what number of count to be considered as factors for numerics
@@ -64,7 +64,7 @@ train$interest_level<-as.integer(factor(train$interest_level))
 
 train$week<-as.integer(factor(train$weekend))
 
-xFeat <- names(train)[c(-1,-8, -9)]
+xFeat <- names(train)[c(-1, -9)]
 yFeat <- 'interest_level_num'
 
 createModelFormula <- function(targetVar, xVars, includeIntercept = TRUE){
@@ -134,7 +134,7 @@ dval <- xgb.DMatrix(data.matrix(x_val[xFeat]), label=y_val)
 #perform training
 gbdt = xgb.train(params = xgb_params,
                  data = dtrain,
-                 nrounds =500,
+                 nrounds =800,
                  watchlist = list(train = dtrain, val=dval),
                  print_every_n = 25,
                  early_stopping_rounds=50)
@@ -168,3 +168,31 @@ compare = as.data.frame(cbind(OOF_prediction$max_prob,train.test$interest_level)
 colnames(compare) = c('predicted', 'real')
 conf_matrix <- table(compare$predicted, compare$real)
 confusionMatrix(conf_matrix)
+
+#Confusion Matrix and Statistics
+#1    2    3
+#1   53   16   29
+#2   64 1548  333
+#3   93  132  199
+
+#Overall Statistics
+
+#Accuracy : 0.7296          
+#95% CI : (0.7116, 0.7471)
+#No Information Rate : 0.6875          
+#P-Value [Acc > NIR] : 2.649e-06       
+
+#Kappa : 0.3493          
+#Mcnemar's Test P-Value : < 2.2e-16       
+
+#Statistics by Class:
+
+#                     Class: 1 Class: 2 Class: 3
+#Sensitivity           0.25238   0.9127  0.35472
+#Specificity           0.98006   0.4851  0.88195
+#Pos Pred Value        0.54082   0.7959  0.46934
+#Neg Pred Value        0.93373   0.7165  0.82281
+#Prevalence            0.08512   0.6875  0.22740
+#Detection Rate        0.02148   0.6275  0.08066
+#Detection Prevalence  0.03972   0.7884  0.17187
+#Balanced Accuracy     0.61622   0.6989  0.61834

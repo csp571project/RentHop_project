@@ -10,7 +10,7 @@ library(reshape2)
 seed = 11080
 set.seed(seed)
 
-train <- read.csv("../processed_data/train_baselineCLEAN.csv", header = TRUE)
+train <- read.csv("../processed_data/train_moreFeat36.csv", header = TRUE)
 
 featExtract <- function(c, lvl) {
   ###lvl controls what number of count to be considered as factors for numerics
@@ -64,7 +64,7 @@ train$interest_level<-as.integer(factor(train$interest_level))
 
 train$week<-as.integer(factor(train$weekend))
 
-xFeat <- names(train)[c(-1,-8, -9)]
+xFeat <- names(train)[c(-1, -9)]
 yFeat <- 'interest_level_num'
 
 createModelFormula <- function(targetVar, xVars, includeIntercept = TRUE){
@@ -79,21 +79,11 @@ createModelFormula <- function(targetVar, xVars, includeIntercept = TRUE){
 modelForm <- createModelFormula(yFeat, xFeat)
 
 
-
-
-inTrain <- createDataPartition(y = train$interest_level, list = FALSE, p = 0.95)
-train.train <- train[inTrain,]
-train.test <- train[-inTrain,]
-
-y <- as.numeric(train.train$interest_level)
+y <- as.numeric(train$interest_level)
 
 y = y - 1
-train.train$interest_level = NULL
-train.train$interest_level_num = NULL
-#train.test$interest_level = NULL
-
-###
-
+train$interest_level = NULL
+train$interest_level_num = NULL
 ##################
 #Parameters for XGB
 
@@ -111,7 +101,7 @@ xgb_params = list(
 #############################################################
 
 #convert xgbmatrix
-train.trainM <- xgb.DMatrix(data.matrix(train.train))
+trainM <- xgb.DMatrix(data.matrix(train))
 
 #create folds
 kfolds<- 10
@@ -120,8 +110,8 @@ fold <- folds$Fold01
 
 
 
-x_train<-train.train[-fold,] #Train set
-x_val<-train.train[fold,] #Out of fold validation set
+x_train<-train[-fold,] #Train set
+x_val<-train[fold,] #Out of fold validation set
 
 
 y_train<-y[-fold]
@@ -132,39 +122,29 @@ dtrain <- xgb.DMatrix(data.matrix(x_train[xFeat]), label=y_train)
 dval <- xgb.DMatrix(data.matrix(x_val[xFeat]), label=y_val)
 
 #perform training
-gbdt = xgb.train(params = xgb_params,
+gbdt <- xgb.train(params = xgb_params,
                  data = dtrain,
-                 nrounds =500,
+                 nrounds =800,
                  watchlist = list(train = dtrain, val=dval),
                  print_every_n = 25,
                  early_stopping_rounds=50)
 
+gbdt
 
-train.testM <- xgb.DMatrix(data.matrix(train.test[xFeat]))
+ktest<- read.csv("../processed_data/test_moreFeat36.csv", header = TRUE)
+kM <- xgb.DMatrix(data.matrix(ktest))
 
-allpredictions =  (as.data.frame(matrix(predict(gbdt,train.testM), nrow=dim(train.testM), byrow=TRUE)))
+allpredictions =  (as.data.frame(matrix(predict(gbdt,kM), nrow=dim(kM), byrow=TRUE)))
 
-##
-OOF_prediction <- allpredictions[1:3] %>%
-  mutate(max_prob = max.col(., ties.method = "last")) 
-#View(OOF_prediction)
-##
 ######################
 ##Generate Submission
-allpredictions = cbind (allpredictions, train.test$listing_id)
+allpredictions = cbind (allpredictions, ktest$listing_id)
 names(allpredictions)<-c("high","low","medium","listing_id")
 allpredictions=allpredictions[,c(1,3,2,4)]
-write.csv(allpredictions,paste0(Sys.Date(),"-BaseModel-20Fold-Seed",seed,".csv"),row.names = FALSE)
+write.csv(allpredictions,paste0(Sys.Date(),"-rpawar2",seed,".csv"),row.names = FALSE)
 
 
 ####################################
 ###Generate Feature Importance Plot
-imp <- xgb.importance(names(train.train[xFeat]),model = gbdt)
+imp <- xgb.importance(names(train[xFeat]),model = gbdt)
 xgb.ggplot.importance(imp)
-
-"class"
-
-compare = as.data.frame(cbind(OOF_prediction$max_prob,train.test$interest_level))
-colnames(compare) = c('predicted', 'real')
-conf_matrix <- table(compare$predicted, compare$real)
-confusionMatrix(conf_matrix)
