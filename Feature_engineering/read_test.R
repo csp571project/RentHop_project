@@ -82,7 +82,7 @@ remove(description)
 remove(corpus)
 gc()
 
-###############
+############### Shuyu 
 test$created_year <-
   format(as.Date(as.Date(test$created), format = "%Y-%m-%d"), "%Y")
 
@@ -100,9 +100,7 @@ test$weekend <-
 test$created_hour <- substr(test$created, 12, 13)
 
 
-##RP
-
-######
+##RP ######
 # Add  the number of features and photos
 test$numFeat <- lengths(test$features)
 test$numPh <- lengths(test$photos)
@@ -145,7 +143,6 @@ test$street_address<-as.integer(factor(unlist(test$street_address)))
 
 
 test$bed_price <- as.numeric(test$price)/as.numeric(test$bedrooms)
-
 test[which(is.infinite(test$bed_price)),]$bed_price = test[which(is.infinite(test$bed_price)),]$price
 
 #add sum of rooms and price per room
@@ -163,13 +160,14 @@ test$numFeat <- log(test$numFeat + 1)
 test$price <- log(test$price + 1)
 test$room_price <- log(test$room_price + 1)
 test$bed_price <- log(test$bed_price + 1)
-##############################################################
 
+
+##############################################################
+## DD
 #Removing duplicate values from features (combining related words)
 
 
 test$features <- sapply(test$features, tolower)
-
 
 #Group related features
 test$features <-
