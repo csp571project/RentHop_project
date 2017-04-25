@@ -21,7 +21,7 @@ library(rpart)
 fit3 <- rpart(interest_level~.,
               data=renttrain,
               method="class",
-              control=rpart.control(minsplit=ncol(train[-1]), cp=0.001), )
+              control=rpart.control(minsplit=ncol(train[-1]), cp=0.001))
 printcp(fit3)
 library(rattle)
 library(rpart.plot)
@@ -34,6 +34,24 @@ Prediction <- predict(fit3, renttest, type = "class")
 confusionMatrix(reference = renttest$interest_level, data = Prediction)
 
 #Highest accuracy with different combinations of rpart.control parameters
+
+library(partykit)
+fit4 <- ctree(interest_level~.,
+              data=renttrain
+              #,control=ctree_control(minsplit=ncol(train[-1]), cp=0.001)
+              )
+printcp(fit3)
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
+
+rpart.plot(fit3)
+
+
+Prediction <- predict(fit3, renttest, type = "class")
+confusionMatrix(reference = renttest$interest_level, data = Prediction)
+
+
 # Confusion Matrix and Statistics
 # 
 # Reference
