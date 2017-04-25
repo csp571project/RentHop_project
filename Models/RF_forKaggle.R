@@ -1,6 +1,7 @@
 library(nnet)
 library(caret)
 
+
 ########################
 # load all processed data
 ########################
@@ -36,25 +37,6 @@ library(randomForest)
 train$distance_city<- log(train$distance_city) 
 # modelForm1 <- createModelFormula(targetVar, c(catVars, numVarsfit))
 
-rf_ctrl<- trainControl(method = "adaptive_boot", 
-                       number =6,
-                       repeats=3,
-                       returnResamp="all",
-                       summaryFunction=mnLogLoss,
-                       verboseIter = TRUE,
-                       classProbs=TRUE,
-                       search = "grid",
-                       allowParallel=TRUE)
- 
- rf_fit<- train(modelForm, data = train,
-               method="rf",
-               tuneGrid=expand.grid(mtry=c(6.4)*ncol(train)),
-               metric="mnLogLoss",
-               trControl = rf_ctrl,
-               importance=TRUE,
-               ntree=500 )
- 
- 
 control <- trainControl(method="adaptive_cv", number=8, repeats=5, search="grid", verboseIter = TRUE,allowParallel=TRUE , returnResamp="all")
 fit1 <-  randomForest(modelForm, data = train, importance = TRUE, 
                       ntree = 1000, allowParallel = TRUE, trcontrol = rf_ctrl, verbose=TRUE)

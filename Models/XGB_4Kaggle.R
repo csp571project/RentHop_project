@@ -10,6 +10,8 @@ library(reshape2)
 seed = 11080
 set.seed(seed)
 
+setwd("/home/raz/Projects/TEMP/EDA_features/Models")
+
 train <- read.csv("../processed_data/train_moreFeat36.csv", header = TRUE)
 
 featExtract <- function(c, lvl) {
@@ -84,6 +86,8 @@ y <- as.numeric(train$interest_level)
 y = y - 1
 train$interest_level = NULL
 train$interest_level_num = NULL
+
+train$distance_city<- log(train$distance_city) 
 #############################################################
 #convert xgbmatrix
 trainM <- xgb.DMatrix(data.matrix(train))
@@ -111,7 +115,7 @@ dval <- xgb.DMatrix(data.matrix(x_val[xFeat]), label=y_val)
 xgb_params = list(
   colsample_bytree= 0.7,
   subsample = 0.7,
-  eta = 0.01,
+  eta = 0.03,
   objective= 'multi:softprob',
   max_depth= 5,
   min_child_weight= 1,
@@ -129,8 +133,9 @@ gbdt <- xgb.train(params = xgb_params,
                  early_stopping_rounds=50)
 
 gbdt
-
+gc()
 ktest<- read.csv("../processed_data/test_moreFeat36.csv", header = TRUE)
+ktest$distance_city<- log(ktest$distance_city) 
 kM <- xgb.DMatrix(data.matrix(ktest))
 
 allpredictions =  (as.data.frame(matrix(predict(gbdt,kM), nrow=dim(kM), byrow=TRUE)))
