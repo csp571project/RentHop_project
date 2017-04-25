@@ -1,26 +1,37 @@
 #Run decision trees on the selected features
 #renttrain<-renttrain["interest_level_num"]
-renttrain<-subset(renttrain, select=-c(interest_level_num))
-y<-renttest$interest_level
-renttest<-subset(renttest, select=-c(interest_level_num,interest_level))
+
+train <- read.csv("../processed_data/train_moreFeat36.csv", header = TRUE)
+
+set.seed(11080)
+library('caret')
+trainsplit <- 0.80
+
+testsplit <- 1 - trainsplit
+inTrain <-
+  createDataPartition(y = train$interest_level,
+                      p = trainsplit,
+                      list = FALSE)
+renttrain <- train[inTrain, ]
+renttest <- train[-inTrain, ]
+stopifnot(nrow(renttrain) + nrow(renttest) == nrow(train))
+
 
 library(rpart)
 fit3 <- rpart(interest_level~.,
               data=renttrain,
               method="class",
-              control=rpart.control(minsplit=150, cp=0.001))
+              control=rpart.control(minsplit=ncol(train[-1]), cp=0.001), )
 printcp(fit3)
 library(rattle)
 library(rpart.plot)
 library(RColorBrewer)
 
-fancyRpartPlot(fit3)
+rpart.plot(fit3)
 
 
 Prediction <- predict(fit3, renttest, type = "class")
-Actual <- y
-
-confusionMatrix(reference = Actual, data = Prediction)
+confusionMatrix(reference = renttest$interest_level, data = Prediction)
 
 #Highest accuracy with different combinations of rpart.control parameters
 # Confusion Matrix and Statistics
