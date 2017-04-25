@@ -71,9 +71,9 @@ write.csv(description, file= "../processed_data/train_description.csv", row.name
 
 ####################
 # Add this column to the baseline data
-train = read.csv('../processed_data/train_baseline11_v3.csv')
-train = merge(train, description[c('listing_id', 'clean_wordcount')])
-write.csv(train, file = '../processed_data/train_baseline12_v4.csv', row.names = FALSE)
+# train = read.csv('../processed_data/train_baseline11_v3.csv')
+# train = merge(train, description[c('listing_id', 'clean_wordcount')])
+# write.csv(train, file = '../processed_data/train_baseline14_v4.csv', row.names = FALSE)
 
 ####################
 ## tokenize and tfidf
@@ -202,6 +202,7 @@ wordcloud(highCorpus, max.words = 50, random.order = T, colors = pal2)
 # http://stackoverflow.com/questions/25905144/removing-overly-common-words-occur-in-more-than-80-of-the-documents-in-r
 corpus = VCorpus(VectorSource(non_empty_clean_des$clean_des))
 dtm = DocumentTermMatrix(corpus, control = list(wordLengths=c(1,Inf)))
+
 removeCommonTerms <- function (x, pct) {
   stopifnot(inherits(x, c("DocumentTermMatrix", "TermDocumentMatrix")), 
             is.numeric(pct), pct > 0, pct < 1)
@@ -214,35 +215,37 @@ removeCommonTerms <- function (x, pct) {
     return(x[termIndex, ])
   else return(x[,termIndex])
 }
+# The percentage is decided to show the difference between levels
+# And the cross validation in the end shows different percentage does not really matter
 removed_dtm = removeCommonTerms(dtm, 0.25)
 
 lowDTM2 = removed_dtm[non_empty_clean_des$interest_level=='low', ]
 lowFrequent2 = sort(colSums(as.matrix(lowDTM2)), decreasing = TRUE)
-png("wordcloud_low.png", width=1280,height=800)
-d <- data.frame(word = names(lowFrequent2),freq=lowFrequent2)
-wordcloud(d$word, d$freq, max.words = 50, scale=c(3,.1), random.order = FALSE, colors = pal2)
-dev.off()
+# png("wordcloud_low.png", width=1280,height=800)
+# d <- data.frame(word = names(lowFrequent2),freq=lowFrequent2)
+# wordcloud(d$word, d$freq, max.words = 50, scale=c(3,.1), random.order = FALSE, colors = pal2)
+# dev.off()
 
 mediumDTM2 = removed_dtm[non_empty_clean_des$interest_level=='medium', ]
 mediumFrequent2 = sort(colSums(as.matrix(mediumDTM2)), decreasing = TRUE)
-png("wordcloud_medium.png", width=1280,height=800)
-d <- data.frame(word = names(mediumFrequent2), freq=mediumFrequent2)
-wordcloud(d$word, d$freq, max.words = 50, scale=c(3,.2), random.order = FALSE, colors = pal2)
-dev.off()
+# png("wordcloud_medium.png", width=1280,height=800)
+# d <- data.frame(word = names(mediumFrequent2), freq=mediumFrequent2)
+# wordcloud(d$word, d$freq, max.words = 50, scale=c(3,.2), random.order = FALSE, colors = pal2)
+# dev.off()
 
 highDTM2 = removed_dtm[non_empty_clean_des$interest_level=='high', ]
 highFrequent2 = sort(colSums(as.matrix(highDTM2)), decreasing = TRUE)
-png("wordcloud_high.png", width=1280,height=800)
-d <- data.frame(word = names(highFrequent2),freq=highFrequent2)
-wordcloud(d$word, d$freq, max.words = 50, scale=c(3,.2), random.order = FALSE, colors = pal2)
-dev.off()
+# png("wordcloud_high.png", width=1280,height=800)
+# d <- data.frame(word = names(highFrequent2),freq=highFrequent2)
+# wordcloud(d$word, d$freq, max.words = 50, scale=c(3,.2), random.order = FALSE, colors = pal2)
+# dev.off()
 
 # Check the most frequent term set for each level and get the joint of the sets
 lowTerms2 = names(lowFrequent2[1:50])
 mediumTerms2 = names(mediumFrequent2[1:50])
 highTerms2 = names(highFrequent2[1:50])
 
-setdiff(lowTerms2, union(mediumTerms2, highTerms2))
+# setdiff(lowTerms2, union(mediumTerms2, highTerms2))
 # [1] "color"        "income"       "enough"       "note"         "electric"    
 # [6] "tenant"       "value"        "entertaining" "fi"           "wi"          
 # [11] "asap"         "deep"         "gardens"      "heating"      "hotel"       
@@ -250,32 +253,183 @@ setdiff(lowTerms2, union(mediumTerms2, highTerms2))
 # [21] "priced"       "prices"       "tables"       "approval"     "commute"     
 # [26] "dresser"      "etc"          "immediately"  "second"       "trendy"      
 # [31] "way"          "front"        "personal"    
-setdiff(mediumTerms2, union(lowTerms2, highTerms2))
+# setdiff(mediumTerms2, union(lowTerms2, highTerms2))
 # [1] "dryer"      "apartments" "west"       "fitness"    "schedule"   "deck"
-setdiff(highTerms2, union(mediumTerms2, lowTerms2))
+# setdiff(highTerms2, union(mediumTerms2, lowTerms2))
 # [1] "rent"     "super"    "included" "will"     "street"   "bed"      "two"     
 # [8] "away"  
 
-union = union(lowTerms2, mediumTerms2)
-union = union(temp, highTerms2)
+union = union(union(lowTerms2, mediumTerms2), highTerms2)
 length(union)
 # [1] 65
 
+#########################
 # tfidf (natural tf + idf + no normalizaition)
 tfidf = weightSMART(dtm, spec='ntn')
+
+# # fail in extract the most frequent terms in tfidf table
+# lowTfidf = tfidf[non_empty_clean_des$interest_level=='low', ]
+# lowFrequent = sort(colSums(as.matrix(lowTfidf)), decreasing = TRUE)#[-(1:20)]
+# png("wordcloud_tf_low.png", width=1280,height=800)
+# d <- data.frame(word = names(lowFrequent),freq=lowFrequent)
+# wordcloud(d$word, d$freq, max.words = 100, scale=c(3,.1), random.order = FALSE, colors = pal2)
+# dev.off()
+# 
+# mediumTfidf = tfidf[non_empty_clean_des$interest_level=='medium', ]
+# mediumFrequent = sort(colSums(as.matrix(mediumTfidf)), decreasing = TRUE)#[-(1:20)]
+# png("wordcloud_tf_medium.png", width=1280,height=800)
+# d <- data.frame(word = names(mediumFrequent), freq=mediumFrequent)
+# wordcloud(d$word, d$freq, max.words = 100, scale=c(3,.2), random.order = FALSE, colors = pal2)
+# dev.off()
+# 
+# highTfidf = tfidf[non_empty_clean_des$interest_level=='high', ]
+# highFrequent = sort(colSums(as.matrix(highTfidf)), decreasing = TRUE)#[-(1:20)]
+# png("wordcloud_tf_high.png", width=1280,height=800)
+# d <- data.frame(word = names(highFrequent),freq=highFrequent)
+# wordcloud(d$word, d$freq, max.words = 100, scale=c(3,.2), random.order = FALSE, colors = pal2)
+# dev.off()
+# 
+# # Check the most frequent term set for each level and get the joint of the sets
+# lowTerms = names(lowFrequent[1:50])
+# mediumTerms = names(mediumFrequent[1:50])
+# highTerms = names(highFrequent[1:50])
+# 
+# setdiff(lowTerms, union(mediumTerms, highTerms))
+# # [1] "information"  "coopercooper" "york"         "access"       "home"        
+# # [6] "center"       "amenities"   
+# setdiff(mediumTerms, union(lowTerms, highTerms))
+# # [1] "free"
+# setdiff(highTerms, union(mediumTerms, lowTerms))
+# # [1] "included" "rent"     "studio"   "size"     "st"       "walk"     "subway"  
+# # [8] "super"    "ceilings" "kitchen"  "heat"   
+# 
+# union = union(union(lowTerms, mediumTerms), highTerms)
+# length(union)
+# # [1] 69
 
 # Join description table with tfidf by the listing id
 tfidf_df = as.data.frame(inspect(tfidf[,which(tfidf$dimnames$Terms %in% union)]))
 colnames(tfidf_df) = sapply(colnames(tfidf_df), function(v) paste('term',v,sep='_'), USE.NAMES = FALSE)
 tfidf_df['listing_id'] = non_empty_clean_des$listing_id
 
-tfidf_df_full=description[c('listing_id', 'interest_level', 'interest_Nbr', 'clean_wordcount')]
-tfidf_df_full['wordcount'] = tfidf_df_full$clean_wordcount
-tfidf_df_full$clean_wordcount=NULL
+tfidf_df_full=description[c('listing_id', 'interest_level', 'interest_Nbr')]
 
 tfidf_df_full = merge(x = tfidf_df_full, y = tfidf_df, by = "listing_id", all.x = TRUE)
 
 # Convert all na to 0
 tfidf_df_full[is.na(tfidf_df_full)] = 0
 
-write.csv(tfidf_df_full, file="../processed_data/train_description_wordcount_tfidf_new.csv", row.names=FALSE)
+write.csv(tfidf_df_full, file="../processed_data/train_description_tfidf_new.csv", row.names=FALSE)
+
+####################
+# Try use pca with the frequent terms
+train = tfidf_df_full
+xVars = colnames(tfidf_df)[-66]
+tr.pca <- princomp(as.formula(paste("~", paste(xVars, collapse = '+ '))), train)
+summary(tr.pca)
+plot(tr.pca)
+loadings(tr.pca)
+predict(tr.pca)[,1]
+
+#####################
+# # output the tfidf for test set
+# test_description = read.csv('../processed_data/test_description.csv')
+# test_non_empty_clean_des = test_description[which(test_description$clean_wordcount!=0), ]
+# 
+# test_corpus = VCorpus(VectorSource(test_non_empty_clean_des$clean_des))
+# test_dtm = DocumentTermMatrix(test_corpus, control = list(wordLengths=c(1,Inf)))
+# test_tfidf = weightSMART(test_dtm, spec='ntn')
+# 
+# test_tfidf_df = as.data.frame(inspect(test_tfidf[,which(test_tfidf$dimnames$Terms %in% union)]))
+# colnames(test_tfidf_df) = sapply(colnames(test_tfidf_df), function(v) paste('term',v,sep='_'), USE.NAMES = FALSE)
+# test_tfidf_df['listing_id'] = test_non_empty_clean_des$listing_id
+# 
+# test_tfidf_df_full=test_description['listing_id']
+# 
+# test_tfidf_df_full = merge(x = test_tfidf_df_full, y = test_tfidf_df, by = "listing_id", all.x = TRUE)
+# 
+# # Convert all na to 0
+# test_tfidf_df_full[is.na(test_tfidf_df_full)] = 0
+# 
+# write.csv(test_tfidf_df_full, file="../processed_data/test_description_tfidf.csv", row.names=FALSE)
+
+
+#####################
+# # No big difference between the removed percentage
+# createModelFormula <- function(targetVar, xVars, includeIntercept = TRUE){
+#   if(includeIntercept){
+#     modelForm <- as.formula(paste(targetVar, "~", paste(xVars, collapse = '+ ')))
+#   } else {
+#     modelForm <- as.formula(paste(targetVar, "~", paste(xVars, collapse = '+ '), -1))
+#   }
+#   return(modelForm)
+# }
+# 
+# cross_validation = function(data = data, targetVar = targetVar, xVars = xVars, includeIntercept = TRUE){
+#   accuracy = numeric()
+#   for(i in 1:10){
+#     if(i<10){
+#       fold = paste('Fold0', i, sep = '')
+#     }else{
+#       fold = paste('Fold', i, sep = '')
+#     }
+#     testIndexes <- createFolds(data$interest_level_mult, k=10, list=TRUE)[[fold]]
+#     testData <- data[testIndexes, ]
+#     trainData <- data[-testIndexes, ]
+#     
+#     modelForm = createModelFormula(targetVar, xVars, includeIntercept)
+#     model <- multinom(modelForm, data = trainData)
+#     
+#     predicted = predict(model, testData)
+#     compare = as.data.frame(cbind(predicted, testData$interest_level_mult))
+#     colnames(compare) = c('predicted', 'real')
+#     accuracy = c(accuracy, mean(compare$predicted == compare$real))
+#   }
+#   return(accuracy)
+# }
+# 
+# library(nnet)
+# library(caret)
+# for(removed_percentage in seq(0.1, 0.35, 0.05)){
+#   print(removed_percentage)
+#   
+#   removed_dtm = removeCommonTerms(dtm, removed_percentage)
+#   
+#   print('proessing low')
+#   lowDTM2 = removed_dtm[non_empty_clean_des$interest_level=='low', ]
+#   lowFrequent2 = sort(colSums(as.matrix(lowDTM2)), decreasing = TRUE)
+#   
+#   print('proessing medium')
+#   mediumDTM2 = removed_dtm[non_empty_clean_des$interest_level=='medium', ]
+#   mediumFrequent2 = sort(colSums(as.matrix(mediumDTM2)), decreasing = TRUE)
+#   
+#   print('proessing high')
+#   highDTM2 = removed_dtm[non_empty_clean_des$interest_level=='high', ]
+#   highFrequent2 = sort(colSums(as.matrix(highDTM2)), decreasing = TRUE)
+#   
+#   lowTerms2 = names(lowFrequent2[1:50])
+#   mediumTerms2 = names(mediumFrequent2[1:50])
+#   highTerms2 = names(highFrequent2[1:50])
+#   
+#   xVars = union(union(lowTerms2, mediumTerms2), highTerms2)
+#   print(paste('xVars', length(xVars), sep=' '))
+#   
+#   tfidf_df = as.data.frame(inspect(tfidf[,which(tfidf$dimnames$Terms %in% xVars)]))
+#   tfidf_df['listing_id'] = non_empty_clean_des$listing_id
+#   
+#   tfidf_df_full=description[c('listing_id', 'interest_level')]
+#   tfidf_df_full = merge(x = tfidf_df_full, y = tfidf_df, by = "listing_id", all.x = TRUE)
+#   tfidf_df_full[is.na(tfidf_df_full)] = 0
+#   tfidf_df_full$interest_level_mult <- relevel(tfidf_df_full$interest_level, ref = "low")
+#   
+#   targetVar = 'interest_level_mult'
+#   
+#   print('proessing cross validation')
+#   accuracy = cross_validation(tfidf_df_full, targetVar, xVars)
+#   print(mean(accuracy))
+# }
+# 
+# 0.10: 0.6931758
+# 0.15: 0.6923997
+# 0.20: 0.6935827
+# 0.25: 0.6926989
