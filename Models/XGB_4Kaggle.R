@@ -84,22 +84,7 @@ y <- as.numeric(train$interest_level)
 y = y - 1
 train$interest_level = NULL
 train$interest_level_num = NULL
-##################
-#Parameters for XGB
-
-xgb_params = list(
-  colsample_bytree= 0.7,
-  subsample = 0.7,
-  eta = 0.1,
-  objective= 'multi:softprob',
-  max_depth= 4,
-  min_child_weight= 1,
-  eval_metric= "mlogloss",
-  num_class = 3,
-  seed = seed
-)
 #############################################################
-
 #convert xgbmatrix
 trainM <- xgb.DMatrix(data.matrix(train))
 
@@ -120,11 +105,25 @@ y_val<-y[fold]
 #convert to xgbmatrix
 dtrain <- xgb.DMatrix(data.matrix(x_train[xFeat]), label=y_train)
 dval <- xgb.DMatrix(data.matrix(x_val[xFeat]), label=y_val)
+##################
+#Parameters for XGB
+
+xgb_params = list(
+  colsample_bytree= 0.7,
+  subsample = 0.7,
+  eta = 0.01,
+  objective= 'multi:softprob',
+  max_depth= 5,
+  min_child_weight= 1,
+  eval_metric= "mlogloss",
+  num_class = 3,
+  seed = seed
+)
 
 #perform training
 gbdt <- xgb.train(params = xgb_params,
                  data = dtrain,
-                 nrounds =800,
+                 nrounds = 3500,
                  watchlist = list(train = dtrain, val=dval),
                  print_every_n = 25,
                  early_stopping_rounds=50)
@@ -148,3 +147,5 @@ write.csv(allpredictions,paste0(Sys.Date(),"-rpawar2",seed,".csv"),row.names = F
 ###Generate Feature Importance Plot
 imp <- xgb.importance(names(train[xFeat]),model = gbdt)
 xgb.ggplot.importance(imp)
+
+

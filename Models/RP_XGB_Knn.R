@@ -100,7 +100,7 @@ train.train$interest_level_num = NULL
 xgb_params = list(
   colsample_bytree= 0.7,
   subsample = 0.7,
-  eta = 0.1,
+  eta = 0.01,
   objective= 'multi:softprob',
   max_depth= 4,
   min_child_weight= 1,
@@ -134,7 +134,7 @@ dval <- xgb.DMatrix(data.matrix(x_val[xFeat]), label=y_val)
 #perform training
 gbdt = xgb.train(params = xgb_params,
                  data = dtrain,
-                 nrounds =800,
+                 nrounds =3000,
                  watchlist = list(train = dtrain, val=dval),
                  print_every_n = 25,
                  early_stopping_rounds=50)
@@ -150,19 +150,9 @@ OOF_prediction <- allpredictions[1:3] %>%
 #View(OOF_prediction)
 ##
 ######################
-##Generate Submission
-allpredictions = cbind (allpredictions, train.test$listing_id)
-names(allpredictions)<-c("high","low","medium","listing_id")
-allpredictions=allpredictions[,c(1,3,2,4)]
-write.csv(allpredictions,paste0(Sys.Date(),"-BaseModel-20Fold-Seed",seed,".csv"),row.names = FALSE)
-
-
-####################################
 ###Generate Feature Importance Plot
 imp <- xgb.importance(names(train.train[xFeat]),model = gbdt)
 xgb.ggplot.importance(imp)
-
-"class"
 
 compare = as.data.frame(cbind(OOF_prediction$max_prob,train.test$interest_level))
 colnames(compare) = c('predicted', 'real')
