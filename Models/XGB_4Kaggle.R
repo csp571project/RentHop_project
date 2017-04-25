@@ -150,7 +150,7 @@ write.csv(allpredictions,paste0(Sys.Date(),"-rpawar2",seed,".csv"),row.names = F
 
 ####################################
 ###Generate Feature Importance Plot
-imp <- xgb.importance(names(train[xFeat]),model = gbdt)
-xgb.ggplot.importance(imp)
+imp_feat <- xgb.importance(names(train[xFeat]),model = gbdt)
+xgb.ggplot.importance(imp_feat)
 
 
